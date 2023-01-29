@@ -1,0 +1,102 @@
+import PySimpleGUI as sg
+import psutil
+import subprocess
+import wmi
+
+#Definition of WMI classes and psutil
+c = wmi.WMI()   
+my_system = c.Win32_ComputerSystem()[0]
+sku_system = c.Win32_ComputerSystemProduct()[0]
+bios_system = c.Win32_Bios()[0]
+os_system = c.Win32_OperatingSystem()[0]
+ram_system = c.Win32_PhysicalMemoryArray()[0]
+cpu_system = c.Win32_Processor()[0]
+gpu_system = c.Win32_VideoController()[0]
+ram_cimv = c.CIM_PhysicalMemory()[0]
+disk_cimv = c.CIM_DiskDrive()[0]
+bios_cimv = c.CIM_BIOSElement()[0]
+
+#Psutil information
+def get_ram_amount():
+    return f"{psutil.virtual_memory().total / (1024.0 ** 3):.2f} GB"
+def get_hdd_amount():
+    return f"{psutil.disk_usage('/').total / (1024.0 ** 3):.2f} GB"
+def hostname():
+  return subprocess.check_output(f'wmic bios get SerialNumber').decode('utf-8').split('\n')[1:]
+
+#Theme for dashboard theme_dict
+theme_dict = {'BACKGROUND': '#2B475D',
+                'TEXT': '#FFFFFF',
+                'INPUT': '#F2EFE8',
+                'TEXT_INPUT': '#000000',
+                'SCROLL': '#F2EFE8',
+                'BUTTON': ('#000000', '#C2D4D8'),
+                'PROGRESS': ('#FFFFFF', '#C7D5E0'),
+                'BORDER': 1,'SLIDER_DEPTH': 0, 'PROGRESS_DEPTH': 0}
+
+# sg.theme_add_new('Dashboard', theme_dict)     # if using 4.20.0.1+
+sg.LOOK_AND_FEEL_TABLE['Dashboard'] = theme_dict
+sg.theme('Dashboard')
+
+BORDER_COLOR = '#C7D5E0'
+DARK_HEADER_COLOR = '#1B2838'
+BPAD_TOP = ((20,20), (20, 10))
+BPAD_LEFT = ((20,10), (0, 10))
+BPAD_LEFT_INSIDE = (0, 10)
+BPAD_RIGHT = ((10,20), (10, 20))
+
+
+#Theme layout
+sg.theme('Dashboard')
+
+#Main window
+
+top_banner = [[sg.Text('Dashboard'+ ' '*64, font='Any 20', background_color=DARK_HEADER_COLOR),
+               sg.Text('Tuesday 9 June 2020', font='Any 20', background_color=DARK_HEADER_COLOR)]]
+
+top  = [[sg.Text('The Weather Will Go Here', size=(50,1), justification='c', pad=BPAD_TOP, font='Any 20')],
+            [sg.T(f'{i*25}-{i*34}') for i in range(7)],]
+
+
+
+block_1 = [[sg.Text('Block 4', font='Any 20')],    [sg.Text("Serialnumber", size=(15,1)), sg.Text(f"{bios_system.SerialNumber}", font=("tahoma", 23))],
+          [sg.Text("UUID", size=(15,1)), sg.Text(f"{sku_system.UUID}", size=(68))],
+          [sg.Text("Hostname", size=(15,1)), sg.Text(f"{my_system.Caption}", font=("tahoma", 23))],]
+
+block_2 = [[sg.Text('Block 4', font='Any 20')],
+          [sg.Text("GPU info", size=(15,1)), sg.Text(f"{gpu_system.Description}", size=(68))],
+          [sg.Text("GPU info", size=(15,1)), sg.Text(f"{gpu_system.VideoProcessor}", size=(68))],]
+
+block_3 = [[sg.Text('Block 4', font='Any 20')],
+          [sg.Text("RAM", size=(15,1)), sg.Text(get_ram_amount(), size=(11))],
+          [sg.Text("RAM modules", size=(15,1)), sg.Text(f"{ram_system.MemoryDevices}", size=(68))],
+          [sg.Text("RAM speed", size=(15,1)), sg.Text(f"{ram_cimv.Speed} MHz", size=(68))],
+          [sg.Text("RAM pn", size=(15,1)), sg.Text(f"{ram_cimv.PartNumber}", size=(68))],]
+
+block_4 = [[sg.Text('Block 4', font='Any 20')],
+          [sg.Text("Harddrive SN:", size=(15,1)), sg.Text(f"{disk_cimv.SerialNumber}", font=("tahoma", 11))],
+          [sg.Text("BIOS", size=(15,1)), sg.Text(f"{bios_cimv.Caption}", font=("tahoma", 11))],]
+
+
+layout = [[sg.Column(top_banner, size=(960, 60), pad=(0,0), background_color=DARK_HEADER_COLOR)],
+          [sg.Column(top, size=(920, 90), pad=BPAD_TOP)],
+          [sg.Column([[sg.Column(block_1, size=(450,150), pad=BPAD_LEFT_INSIDE)],
+                      [sg.Column(block_2, size=(450,150),  pad=BPAD_LEFT_INSIDE)]], pad=BPAD_LEFT, background_color=BORDER_COLOR),
+           sg.Column(block_4, size=(450, 320), pad=BPAD_RIGHT)]]
+
+
+#input_box         [sg.Text('Enter something on Row 2'), sg.InputText()],
+
+#          [sg.Button('Exit', key='Exit')]]
+
+#window = sg.Window('SMO CZ IT - Computer Information', layout, size=(800,450))
+window = sg.Window('SMO CZ IT - Computer Information', layout, margins=(0,0), background_color=BORDER_COLOR, no_titlebar=True, grab_anywhere=True)
+
+
+
+while True:
+    event, values = window.read()
+    if event == sg.WIN_CLOSED or event == 'Exit':
+        break
+
+window.close()
