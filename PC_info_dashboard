@@ -2,19 +2,66 @@ import PySimpleGUI as sg
 import psutil
 import subprocess
 import wmi
+import datetime
 
-#Definition of WMI classes and psutil
+#Definition of Version print
+version = "Version v1.0 29-1-2023"
+
+#Definition of Date and time print
+now = datetime.datetime.now()
+my_date = now.strftime("%Y-%m-%d %H:%M")
+
+#Definition of WMI classes
+#http://timgolden.me.uk/python/wmi/tutorial.html
+
 c = wmi.WMI()   
 my_system = c.Win32_ComputerSystem()[0]
 sku_system = c.Win32_ComputerSystemProduct()[0]
 bios_system = c.Win32_Bios()[0]
 os_system = c.Win32_OperatingSystem()[0]
 ram_system = c.Win32_PhysicalMemoryArray()[0]
+ramdev_system = c.Win32_PhysicalMemory()[0]
 cpu_system = c.Win32_Processor()[0]
 gpu_system = c.Win32_VideoController()[0]
 ram_cimv = c.CIM_PhysicalMemory()[0]
+ram_cimv2 = c.CIM_PhysicalMemory()[1]
 disk_cimv = c.CIM_DiskDrive()[0]
 bios_cimv = c.CIM_BIOSElement()[0]
+
+#Memory type function
+smbiosramt = int(f"{ramdev_system.SMbiosmemorytype}")
+def ram_type(smbiosramt):
+    if smbiosramt == 10:
+        return "ROM"
+    elif smbiosramt == 11:
+        return "Flash"
+    elif smbiosramt == 12:
+        return "EEPROM"
+    elif smbiosramt == 13:
+        return "FEPROM"
+    elif smbiosramt == 14:
+        return "EPROM"
+    elif smbiosramt == 21:
+        return "DDR2"
+    elif smbiosramt == 22:
+        return "DDR2 FB-DIMM"
+    elif smbiosramt == 24:
+        return "DDR3"
+    elif smbiosramt == 25:
+        return "FBD2"
+    elif smbiosramt == 26:
+        return "DDR4"
+    else:
+        return "N/A"
+
+ramrestype = (ram_type(smbiosramt))
+
+#Boot time definition
+boot_time = datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S")
+
+#hdd size
+hdd_dev = (int(f"{disk_cimv.Size}"))
+hdd_size = str(round(((hdd_dev)/(1024.0 ** 3)), 2))
 
 #Psutil information
 def get_ram_amount():
@@ -43,6 +90,7 @@ DARK_HEADER_COLOR = '#1B2838'
 BPAD_TOP = ((20,20), (20, 10))
 BPAD_LEFT = ((20,10), (0, 10))
 BPAD_LEFT_INSIDE = (0, 10)
+BPAD_RIGHT_INSIDE = ((0,10), (0,10))
 BPAD_RIGHT = ((10,20), (10, 20))
 
 
@@ -51,40 +99,48 @@ sg.theme('Dashboard')
 
 #Main window
 
-top_banner = [[sg.Text('Dashboard'+ ' '*64, font='Any 20', background_color=DARK_HEADER_COLOR),
-               sg.Text('Tuesday 9 June 2020', font='Any 20', background_color=DARK_HEADER_COLOR)]]
+top_banner = [[sg.Text('Nazev', font='Any 14', background_color=DARK_HEADER_COLOR),
+                sg.Text(my_date, font='Any 14', background_color=DARK_HEADER_COLOR)]]
 
-top  = [[sg.Text('The Weather Will Go Here', size=(50,1), justification='c', pad=BPAD_TOP, font='Any 20')],
-            [sg.T(f'{i*25}-{i*34}') for i in range(7)],]
+top  = [[sg.Text('SMO CZ IT - Installation center software', size=(50,1), justification='c', pad=BPAD_TOP, font='Any 20')],
+            [sg.T(version)],]
 
-
-
-block_1 = [[sg.Text('Block 4', font='Any 20')],    [sg.Text("Serialnumber", size=(15,1)), sg.Text(f"{bios_system.SerialNumber}", font=("tahoma", 23))],
+block_1 = [[sg.Text('Identification', font='Any 16')],
+          [sg.Text("Hostname", size=(15,1)), sg.Text(f"{my_system.Caption}", font=("tahoma", 23))],
+          [sg.Text("Serialnumber", size=(15,1)), sg.Text(f"{bios_system.SerialNumber}", font=("tahoma", 23))],
           [sg.Text("UUID", size=(15,1)), sg.Text(f"{sku_system.UUID}", size=(68))],
-          [sg.Text("Hostname", size=(15,1)), sg.Text(f"{my_system.Caption}", font=("tahoma", 23))],]
+          [sg.Text("Model", size=(15,1)), sg.Text(f"{my_system.Model}", size=(68))],]
 
-block_2 = [[sg.Text('Block 4', font='Any 20')],
-          [sg.Text("GPU info", size=(15,1)), sg.Text(f"{gpu_system.Description}", size=(68))],
-          [sg.Text("GPU info", size=(15,1)), sg.Text(f"{gpu_system.VideoProcessor}", size=(68))],]
+block_2 = [[sg.Text('System information', font='Any 16')],
+          [sg.Text("OS", size=(15,1)), sg.Text(f"{os_system.Caption} / build.{os_system.Version}", size=(68))],
+          [sg.Text("OS last boot", size=(15,1)), sg.Text(boot_time, size=(68))],
+          [sg.Text("Domain", size=(15,1)), sg.Text(f"{my_system.Domain}", size=(24))],
+             ]
 
-block_3 = [[sg.Text('Block 4', font='Any 20')],
-          [sg.Text("RAM", size=(15,1)), sg.Text(get_ram_amount(), size=(11))],
-          [sg.Text("RAM modules", size=(15,1)), sg.Text(f"{ram_system.MemoryDevices}", size=(68))],
-          [sg.Text("RAM speed", size=(15,1)), sg.Text(f"{ram_cimv.Speed} MHz", size=(68))],
-          [sg.Text("RAM pn", size=(15,1)), sg.Text(f"{ram_cimv.PartNumber}", size=(68))],]
+block_3 = [[sg.Text('Hardware specs', font='Any 16')],
 
-block_4 = [[sg.Text('Block 4', font='Any 20')],
-          [sg.Text("Harddrive SN:", size=(15,1)), sg.Text(f"{disk_cimv.SerialNumber}", font=("tahoma", 11))],
-          [sg.Text("BIOS", size=(15,1)), sg.Text(f"{bios_cimv.Caption}", font=("tahoma", 11))],]
+          [sg.Text("RAM info", size=(15,1)), sg.Text(get_ram_amount()),sg.Text(f" in {ram_system.MemoryDevices} slot(s)"), sg.Text(ramrestype) ,sg.Text(f"{ram_cimv.Speed} MHz", size=(68))],
+          [sg.Text("RAM PartNumber", size=(15,1)),sg.Text(f"{ram_cimv.partnumber}{ram_cimv.Serialnumber}")],[sg.Text("", size=(15,1)),sg.Text(f"{ram_cimv2.partnumber}{ram_cimv2.Serialnumber}")],
+          [sg.Text("GPU info", size=(10,1)), sg.Text(f"{gpu_system.Description}", size=(68))],
+          [sg.Text("GPU core", size=(10,1)), sg.Text(f"{gpu_system.VideoProcessor}", size=(68))],
+          [sg.Text("Harddrive", size=(10,1)), sg.Text(f"{disk_cimv.Model}"), sg.Text(hdd_size),sg.Text("GiB")],]
 
 
+block_4 = [[sg.Text('Bios', font='Any 16')],
+          [sg.Text("BIOS", size=(10,1)), sg.Text(f"{bios_cimv.Caption}", font=("tahoma", 11))],]
+
+
+#Blocks layout
 layout = [[sg.Column(top_banner, size=(960, 60), pad=(0,0), background_color=DARK_HEADER_COLOR)],
           [sg.Column(top, size=(920, 90), pad=BPAD_TOP)],
-          [sg.Column([[sg.Column(block_1, size=(450,150), pad=BPAD_LEFT_INSIDE)],
+          
+          [sg.Column([[sg.Column(block_1, size=(450,200), pad=BPAD_LEFT_INSIDE)],
                       [sg.Column(block_2, size=(450,150),  pad=BPAD_LEFT_INSIDE)]], pad=BPAD_LEFT, background_color=BORDER_COLOR),
-           sg.Column(block_4, size=(450, 320), pad=BPAD_RIGHT)]]
-
-
+           
+           sg.Column([[sg.Column(block_3, size=(450,215), pad=BPAD_LEFT_INSIDE)],
+                      [sg.Column(block_4, size=(450,135),  pad=BPAD_LEFT_INSIDE)]], pad=BPAD_RIGHT, background_color=BORDER_COLOR)]]     
+        
+           
 #input_box         [sg.Text('Enter something on Row 2'), sg.InputText()],
 
 #          [sg.Button('Exit', key='Exit')]]
