@@ -99,10 +99,10 @@ sg.theme('Dashboard')
 
 #Main window
 
-top_banner = [[sg.Text('Nazev', font='Any 14', background_color=DARK_HEADER_COLOR),
+top_banner = [[sg.Text('SMO-IT', font='Any 14', background_color=DARK_HEADER_COLOR),
                 sg.Text(my_date, font='Any 14', background_color=DARK_HEADER_COLOR)]]
 
-top  = [[sg.Text('SMO CZ IT - Installation center software', size=(50,1), justification='c', pad=BPAD_TOP, font='Any 20')],
+top  = [[sg.Text('SMO CZ IT - Installation center', size=(50,1), justification='c', pad=BPAD_TOP, font='Any 20')],
             [sg.T(version)],]
 
 block_1 = [[sg.Text('Identification', font='Any 16')],
@@ -138,12 +138,12 @@ layout = [[sg.Column(top_banner, size=(960, 60), pad=(0,0), background_color=DAR
                       [sg.Column(block_2, size=(450,150),  pad=BPAD_LEFT_INSIDE)]], pad=BPAD_LEFT, background_color=BORDER_COLOR),
            
            sg.Column([[sg.Column(block_3, size=(450,215), pad=BPAD_LEFT_INSIDE)],
-                      [sg.Column(block_4, size=(450,135),  pad=BPAD_LEFT_INSIDE)]], pad=BPAD_RIGHT, background_color=BORDER_COLOR)]]     
+                      [sg.Column(block_4, size=(450,135),  pad=BPAD_LEFT_INSIDE)]], pad=BPAD_RIGHT, background_color=BORDER_COLOR)],     
         
            
 #input_box         [sg.Text('Enter something on Row 2'), sg.InputText()],
 
-#          [sg.Button('Exit', key='Exit')]]
+          [sg.Button('Exit', key='Exit', pad=(460,15))]
 
 #window = sg.Window('SMO CZ IT - Computer Information', layout, size=(800,450))
 window = sg.Window('SMO CZ IT - Computer Information', layout, margins=(0,0), background_color=BORDER_COLOR, no_titlebar=True, grab_anywhere=True)
